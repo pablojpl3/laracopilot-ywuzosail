@@ -333,9 +333,9 @@
                 </div>
             </div>
 
-            <!-- Separador Redimensionable -->
-            <div id="resizer" class="w-4 bg-red-300 hover:bg-red-500 cursor-col-resize transition-all duration-200 flex items-center justify-center" title="Arrastra para redimensionar el panel - PRUEBA">
-                <span class="text-xs text-white font-bold">||</span>
+            <!-- Separador Redimensionable - VERSIÓN DEBUG -->
+            <div id="resizer" style="width: 20px; background-color: #ff0000; cursor: col-resize; display: flex; align-items: center; justify-content: center; border: 2px solid #000000;" title="SEPARADOR ROJO - ARRASTRA PARA REDIMENSIONAR">
+                <div style="width: 4px; height: 60px; background-color: #ffffff; border-radius: 2px;"></div>
             </div>
 
             <!-- Panel de Vista Previa (Lado Derecho) -->
@@ -468,7 +468,9 @@
 <!-- JavaScript para funcionalidad de redimensionamiento y selección de correos -->
 <script>
 $(document).ready(function() {
-    console.log('Document ready - jQuery funcionando'); // Debug
+    console.log('=== INICIO DEBUG SEPARADOR ===');
+    console.log('Document ready - jQuery funcionando');
+    console.log('jQuery version:', $.fn.jquery);
     
     // Variables para el redimensionamiento
     let isResizing = false;
@@ -483,7 +485,20 @@ $(document).ready(function() {
         emailList: emailList.length,
         resizer: resizer.length,
         emailPreview: emailPreview.length
-    }); // Debug
+    });
+    
+    // Verificar si los elementos existen
+    if (resizer.length === 0) {
+        console.error('ERROR: No se encontró el elemento #resizer');
+        return;
+    }
+    
+    if (emailList.length === 0) {
+        console.error('ERROR: No se encontró el elemento #emailList');
+        return;
+    }
+    
+    console.log('Todos los elementos encontrados correctamente');
     
     // Función para actualizar el indicador de ancho
     function updateWidthIndicator() {
@@ -564,8 +579,18 @@ $(document).ready(function() {
     
     // Test simple de click para verificar que el elemento es clickeable
     resizer.on('click', function(e) {
-        console.log('Click en resizer detectado'); // Debug
+        console.log('✅ Click en resizer detectado - ELEMENTO FUNCIONA');
+        alert('¡El separador funciona! Click detectado.');
         e.preventDefault();
+    });
+    
+    // Test de hover
+    resizer.on('mouseenter', function() {
+        console.log('✅ Mouse enter en resizer - HOVER FUNCIONA');
+    });
+    
+    resizer.on('mouseleave', function() {
+        console.log('✅ Mouse leave en resizer - HOVER FUNCIONA');
     });
     
     $(document).on('mousemove', function(e) {
