@@ -13,6 +13,19 @@ class EmailSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get existing user IDs to use for locked emails
+        $existingUserIds = \App\Models\User::pluck('id')->toArray();
+        
+        // If no users exist, create a default user
+        if (empty($existingUserIds)) {
+            $defaultUser = \App\Models\User::create([
+                'name' => 'Default User',
+                'email' => 'default@example.com',
+                'password' => bcrypt('password'),
+            ]);
+            $existingUserIds = [$defaultUser->id];
+        }
+
         // Create 20 email records with static data (no Faker dependency)
         $emails = [
             // 5 new emails
@@ -289,7 +302,7 @@ class EmailSeeder extends Seeder
                 'has_attachments' => true,
                 'eml_path' => 'emails/2024/01/15/email-018.eml',
                 'size_bytes' => 4096000,
-                'locked_by_user_id' => 1,
+                'locked_by_user_id' => $existingUserIds[0] ?? null,
                 'locked_at' => now()->subMinutes(30),
             ],
             [
@@ -304,7 +317,7 @@ class EmailSeeder extends Seeder
                 'has_attachments' => false,
                 'eml_path' => null,
                 'size_bytes' => 20480,
-                'locked_by_user_id' => 2,
+                'locked_by_user_id' => isset($existingUserIds[1]) ? $existingUserIds[1] : $existingUserIds[0] ?? null,
                 'locked_at' => now()->subMinutes(15),
             ],
 
@@ -321,7 +334,7 @@ class EmailSeeder extends Seeder
                 'has_attachments' => true,
                 'eml_path' => 'emails/2024/01/15/email-020.eml',
                 'size_bytes' => 15360000,
-                'locked_by_user_id' => 3,
+                'locked_by_user_id' => isset($existingUserIds[2]) ? $existingUserIds[2] : $existingUserIds[0] ?? null,
                 'locked_at' => now()->subMinutes(5),
             ],
         ];
