@@ -128,13 +128,19 @@
                 <!-- Header de la Lista -->
                 <div class="p-4 border-b border-slate-200 bg-slate-50">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-slate-800">Bandeja de Entrada</h3>
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-lg font-semibold text-slate-800">Bandeja de Entrada</h3>
+                            <span id="widthIndicator" class="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-full">45%</span>
+                        </div>
                         <div class="flex items-center space-x-2">
                             <button class="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200" title="Marcar todos como leídos">
                                 <i class="fas fa-check-double text-slate-600"></i>
                             </button>
                             <button class="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200" title="Actualizar">
                                 <i class="fas fa-sync-alt text-slate-600"></i>
+                            </button>
+                            <button id="resetWidthBtn" class="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200" title="Resetear ancho del panel">
+                                <i class="fas fa-expand-arrows-alt text-slate-600"></i>
                             </button>
                         </div>
                     </div>
@@ -328,10 +334,8 @@
             </div>
 
             <!-- Separador Redimensionable -->
-            <div id="resizer" class="w-1 bg-slate-200 hover:bg-blue-400 cursor-col-resize transition-colors duration-200 relative group">
-                <div class="absolute inset-y-0 -left-1 -right-1 flex items-center justify-center">
-                    <div class="w-1 h-8 bg-slate-400 rounded-full group-hover:bg-blue-500 transition-colors duration-200"></div>
-                </div>
+            <div id="resizer" class="w-4 bg-red-300 hover:bg-red-500 cursor-col-resize transition-all duration-200 flex items-center justify-center" title="Arrastra para redimensionar el panel - PRUEBA">
+                <span class="text-xs text-white font-bold">||</span>
             </div>
 
             <!-- Panel de Vista Previa (Lado Derecho) -->
@@ -464,6 +468,8 @@
 <!-- JavaScript para funcionalidad de redimensionamiento y selección de correos -->
 <script>
 $(document).ready(function() {
+    console.log('Document ready - jQuery funcionando'); // Debug
+    
     // Variables para el redimensionamiento
     let isResizing = false;
     let startX = 0;
@@ -473,14 +479,32 @@ $(document).ready(function() {
     const resizer = $('#resizer');
     const emailPreview = $('#emailPreview');
     
+    console.log('Elementos encontrados:', {
+        emailList: emailList.length,
+        resizer: resizer.length,
+        emailPreview: emailPreview.length
+    }); // Debug
+    
+    // Función para actualizar el indicador de ancho
+    function updateWidthIndicator() {
+        const containerWidth = emailList.parent().width();
+        const currentWidth = emailList.width();
+        const currentWidthPercent = Math.round((currentWidth / containerWidth) * 100);
+        $('#widthIndicator').text(currentWidthPercent + '%');
+    }
+    
     // Cargar ancho guardado del localStorage
     const savedWidth = localStorage.getItem('emailListWidth');
     if (savedWidth) {
         emailList.css('width', savedWidth + '%');
     }
     
+    // Actualizar indicador inicial
+    updateWidthIndicator();
+    
     // Funcionalidad de redimensionamiento
     resizer.on('mousedown', function(e) {
+        console.log('Mouse down en resizer'); // Debug
         isResizing = true;
         startX = e.clientX;
         startWidth = emailList.width();
@@ -491,6 +515,56 @@ $(document).ready(function() {
         // Cambiar cursor globalmente
         $('body').css('cursor', 'col-resize');
         
+        // Añadir clase para indicar que se está redimensionando
+        resizer.addClass('bg-blue-500');
+        
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    // Funcionalidad de doble clic para resetear ancho
+    resizer.on('dblclick', function(e) {
+        e.preventDefault();
+        resetEmailListWidth();
+    });
+    
+    // Función para resetear el ancho del panel de emails
+    function resetEmailListWidth() {
+        // Animar hacia el ancho por defecto (45%)
+        emailList.animate({
+            width: '45%'
+        }, 300, 'swing', function() {
+            // Guardar el ancho reseteado
+            localStorage.setItem('emailListWidth', 45);
+            updateWidthIndicator();
+        });
+    }
+    
+    // Botón para resetear ancho
+    $('#resetWidthBtn').on('click', function() {
+        resetEmailListWidth();
+    });
+    
+    // Actualizar indicador cuando se redimensiona la ventana
+    $(window).on('resize', function() {
+        updateWidthIndicator();
+    });
+    
+    // Asegurar que el cursor se muestre correctamente al hacer hover
+    resizer.on('mouseenter', function() {
+        console.log('Mouse enter en resizer'); // Debug
+        $(this).css('cursor', 'col-resize');
+    });
+    
+    resizer.on('mouseleave', function() {
+        if (!isResizing) {
+            $(this).css('cursor', 'col-resize');
+        }
+    });
+    
+    // Test simple de click para verificar que el elemento es clickeable
+    resizer.on('click', function(e) {
+        console.log('Click en resizer detectado'); // Debug
         e.preventDefault();
     });
     
@@ -505,6 +579,7 @@ $(document).ready(function() {
         // Limitar el ancho mínimo y máximo
         if (newWidthPercent >= 25 && newWidthPercent <= 75) {
             emailList.css('width', newWidthPercent + '%');
+            updateWidthIndicator();
         }
     });
     
@@ -515,11 +590,15 @@ $(document).ready(function() {
             // Restaurar cursor y selección
             $('body').removeClass('select-none').css('cursor', 'default');
             
+            // Remover clase de redimensionamiento
+            resizer.removeClass('bg-blue-500');
+            
             // Guardar ancho en localStorage
             const containerWidth = emailList.parent().width();
             const currentWidth = emailList.width();
             const currentWidthPercent = (currentWidth / containerWidth) * 100;
             localStorage.setItem('emailListWidth', currentWidthPercent);
+            updateWidthIndicator();
         }
     });
     
@@ -708,8 +787,37 @@ $(document).ready(function() {
     opacity: 1;
 }
 
+#resizer {
+    cursor: col-resize !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+    z-index: 10;
+}
+
 #resizer:hover {
-    background-color: #3b82f6;
+    background-color: #3b82f6 !important;
+    cursor: col-resize !important;
+}
+
+#resizer.bg-blue-500 {
+    background-color: #3b82f6 !important;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    cursor: col-resize !important;
+}
+
+#resizer > * {
+    pointer-events: none;
+}
+
+#emailList {
+    transition: width 0.1s ease-out;
+}
+
+#emailPreview {
+    transition: flex 0.1s ease-out;
 }
 
 .prose {
