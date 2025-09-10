@@ -59,7 +59,7 @@ class EmailFactory extends Factory
             'has_attachments' => $hasAttachments,
             'eml_path' => $emlPath,
             'size_bytes' => $sizeBytes,
-            'locked_by_user_id' => $isLocked ? User::factory() : null,
+            'locked_by_user_id' => $isLocked ? 1 : null,
             'locked_at' => $isLocked ? $this->faker->dateTimeBetween('-7 days', 'now') : null,
         ];
     }
@@ -97,7 +97,7 @@ class EmailFactory extends Factory
     public function locked(): static
     {
         return $this->state(fn (array $attributes) => [
-            'locked_by_user_id' => User::factory(),
+            'locked_by_user_id' => $this->faker->numberBetween(1, 6), // Assuming we have users with IDs 1-6
             'locked_at' => $this->faker->dateTimeBetween('-7 days', 'now'),
         ]);
     }
