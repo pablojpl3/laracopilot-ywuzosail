@@ -333,9 +333,9 @@
                 </div>
             </div>
 
-            <!-- Separador Redimensionable - VERSIÓN DEBUG -->
-            <div id="resizer" style="width: 20px; background-color: #ff0000; cursor: col-resize; display: flex; align-items: center; justify-content: center; border: 2px solid #000000;" title="SEPARADOR ROJO - ARRASTRA PARA REDIMENSIONAR">
-                <div style="width: 4px; height: 60px; background-color: #ffffff; border-radius: 2px;"></div>
+            <!-- Separador Redimensionable - VERSIÓN SIMPLE -->
+            <div id="resizer" style="width: 30px; background-color: #ff0000; cursor: col-resize; display: flex; align-items: center; justify-content: center; border: 3px solid #000000; position: relative; z-index: 1000;" title="SEPARADOR ROJO - ARRASTRA PARA REDIMENSIONAR">
+                <div style="width: 6px; height: 80px; background-color: #ffffff; border-radius: 3px; font-size: 12px; color: #000; display: flex; align-items: center; justify-content: center;">||</div>
             </div>
 
             <!-- Panel de Vista Previa (Lado Derecho) -->
@@ -467,160 +467,159 @@
 
 <!-- JavaScript para funcionalidad de redimensionamiento y selección de correos -->
 <script>
-$(document).ready(function() {
-    console.log('=== INICIO DEBUG SEPARADOR ===');
-    console.log('Document ready - jQuery funcionando');
-    console.log('jQuery version:', $.fn.jquery);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== INICIO DEBUG SEPARADOR - JAVASCRIPT VANILLA ===');
     
     // Variables para el redimensionamiento
     let isResizing = false;
     let startX = 0;
     let startWidth = 0;
     
-    const emailList = $('#emailList');
-    const resizer = $('#resizer');
-    const emailPreview = $('#emailPreview');
+    const emailList = document.getElementById('emailList');
+    const resizer = document.getElementById('resizer');
+    const emailPreview = document.getElementById('emailPreview');
     
     console.log('Elementos encontrados:', {
-        emailList: emailList.length,
-        resizer: resizer.length,
-        emailPreview: emailPreview.length
+        emailList: emailList ? 'SÍ' : 'NO',
+        resizer: resizer ? 'SÍ' : 'NO',
+        emailPreview: emailPreview ? 'SÍ' : 'NO'
     });
     
     // Verificar si los elementos existen
-    if (resizer.length === 0) {
+    if (!resizer) {
         console.error('ERROR: No se encontró el elemento #resizer');
         return;
     }
     
-    if (emailList.length === 0) {
+    if (!emailList) {
         console.error('ERROR: No se encontró el elemento #emailList');
         return;
     }
     
-    console.log('Todos los elementos encontrados correctamente');
+    console.log('✅ Todos los elementos encontrados correctamente');
     
     // Función para actualizar el indicador de ancho
     function updateWidthIndicator() {
-        const containerWidth = emailList.parent().width();
-        const currentWidth = emailList.width();
+        const containerWidth = emailList.parentElement.offsetWidth;
+        const currentWidth = emailList.offsetWidth;
         const currentWidthPercent = Math.round((currentWidth / containerWidth) * 100);
-        $('#widthIndicator').text(currentWidthPercent + '%');
+        const indicator = document.getElementById('widthIndicator');
+        if (indicator) {
+            indicator.textContent = currentWidthPercent + '%';
+        }
     }
     
     // Cargar ancho guardado del localStorage
     const savedWidth = localStorage.getItem('emailListWidth');
     if (savedWidth) {
-        emailList.css('width', savedWidth + '%');
+        emailList.style.width = savedWidth + '%';
     }
     
     // Actualizar indicador inicial
     updateWidthIndicator();
     
-    // Funcionalidad de redimensionamiento
-    resizer.on('mousedown', function(e) {
-        console.log('Mouse down en resizer'); // Debug
-        isResizing = true;
-        startX = e.clientX;
-        startWidth = emailList.width();
-        
-        // Prevenir selección de texto durante el arrastre
-        $('body').addClass('select-none');
-        
-        // Cambiar cursor globalmente
-        $('body').css('cursor', 'col-resize');
-        
-        // Añadir clase para indicar que se está redimensionando
-        resizer.addClass('bg-blue-500');
-        
-        e.preventDefault();
-        e.stopPropagation();
-    });
-    
-    // Funcionalidad de doble clic para resetear ancho
-    resizer.on('dblclick', function(e) {
-        e.preventDefault();
-        resetEmailListWidth();
-    });
-    
-    // Función para resetear el ancho del panel de emails
-    function resetEmailListWidth() {
-        // Animar hacia el ancho por defecto (45%)
-        emailList.animate({
-            width: '45%'
-        }, 300, 'swing', function() {
-            // Guardar el ancho reseteado
-            localStorage.setItem('emailListWidth', 45);
-            updateWidthIndicator();
-        });
-    }
-    
-    // Botón para resetear ancho
-    $('#resetWidthBtn').on('click', function() {
-        resetEmailListWidth();
-    });
-    
-    // Actualizar indicador cuando se redimensiona la ventana
-    $(window).on('resize', function() {
-        updateWidthIndicator();
-    });
-    
-    // Asegurar que el cursor se muestre correctamente al hacer hover
-    resizer.on('mouseenter', function() {
-        console.log('Mouse enter en resizer'); // Debug
-        $(this).css('cursor', 'col-resize');
-    });
-    
-    resizer.on('mouseleave', function() {
-        if (!isResizing) {
-            $(this).css('cursor', 'col-resize');
-        }
-    });
-    
     // Test simple de click para verificar que el elemento es clickeable
-    resizer.on('click', function(e) {
+    resizer.addEventListener('click', function(e) {
         console.log('✅ Click en resizer detectado - ELEMENTO FUNCIONA');
         alert('¡El separador funciona! Click detectado.');
         e.preventDefault();
     });
     
     // Test de hover
-    resizer.on('mouseenter', function() {
+    resizer.addEventListener('mouseenter', function() {
         console.log('✅ Mouse enter en resizer - HOVER FUNCIONA');
+        this.style.backgroundColor = '#ff6666';
     });
     
-    resizer.on('mouseleave', function() {
+    resizer.addEventListener('mouseleave', function() {
         console.log('✅ Mouse leave en resizer - HOVER FUNCIONA');
+        this.style.backgroundColor = '#ff0000';
     });
     
-    $(document).on('mousemove', function(e) {
+    // Funcionalidad de redimensionamiento
+    resizer.addEventListener('mousedown', function(e) {
+        console.log('✅ Mouse down en resizer - INICIANDO REDIMENSIONAMIENTO');
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = emailList.offsetWidth;
+        
+        // Prevenir selección de texto durante el arrastre
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+        
+        // Cambiar color del separador
+        this.style.backgroundColor = '#ff6666';
+        
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    // Funcionalidad de doble clic para resetear ancho
+    resizer.addEventListener('dblclick', function(e) {
+        console.log('✅ Doble click en resizer - RESETEANDO ANCHO');
+        e.preventDefault();
+        resetEmailListWidth();
+    });
+    
+    // Función para resetear el ancho del panel de emails
+    function resetEmailListWidth() {
+        console.log('Reseteando ancho a 45%');
+        emailList.style.width = '45%';
+        localStorage.setItem('emailListWidth', 45);
+        updateWidthIndicator();
+    }
+    
+    // Botón para resetear ancho
+    const resetBtn = document.getElementById('resetWidthBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            resetEmailListWidth();
+        });
+    }
+    
+    // Actualizar indicador cuando se redimensiona la ventana
+    window.addEventListener('resize', function() {
+        updateWidthIndicator();
+    });
+    
+    // Funcionalidad de mousemove para redimensionamiento
+    document.addEventListener('mousemove', function(e) {
         if (!isResizing) return;
         
-        const containerWidth = emailList.parent().width();
+        const containerWidth = emailList.parentElement.offsetWidth;
         const deltaX = e.clientX - startX;
         const newWidth = startWidth + deltaX;
         const newWidthPercent = (newWidth / containerWidth) * 100;
         
+        console.log('Redimensionando:', {
+            deltaX: deltaX,
+            newWidth: newWidth,
+            newWidthPercent: newWidthPercent
+        });
+        
         // Limitar el ancho mínimo y máximo
         if (newWidthPercent >= 25 && newWidthPercent <= 75) {
-            emailList.css('width', newWidthPercent + '%');
+            emailList.style.width = newWidthPercent + '%';
             updateWidthIndicator();
         }
     });
     
-    $(document).on('mouseup', function() {
+    // Funcionalidad de mouseup para finalizar redimensionamiento
+    document.addEventListener('mouseup', function() {
         if (isResizing) {
+            console.log('✅ Finalizando redimensionamiento');
             isResizing = false;
             
             // Restaurar cursor y selección
-            $('body').removeClass('select-none').css('cursor', 'default');
+            document.body.style.userSelect = '';
+            document.body.style.cursor = 'default';
             
-            // Remover clase de redimensionamiento
-            resizer.removeClass('bg-blue-500');
+            // Restaurar color del separador
+            resizer.style.backgroundColor = '#ff0000';
             
             // Guardar ancho en localStorage
-            const containerWidth = emailList.parent().width();
-            const currentWidth = emailList.width();
+            const containerWidth = emailList.parentElement.offsetWidth;
+            const currentWidth = emailList.offsetWidth;
             const currentWidthPercent = (currentWidth / containerWidth) * 100;
             localStorage.setItem('emailListWidth', currentWidthPercent);
             updateWidthIndicator();

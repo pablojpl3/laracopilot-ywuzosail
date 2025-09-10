@@ -79,14 +79,22 @@
     </div>
 
     <!-- Center Panel - Email List -->
-    <div class="w-96 bg-white border-r border-slate-200 flex flex-col">
+    <div id="emailList" class="bg-white border-r border-slate-200 flex flex-col" style="width: 384px; min-width: 300px;">
         <!-- Email List Header -->
         <div class="p-4 border-b border-slate-200">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-slate-800">Emails</h2>
-                <button class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-3 py-1 rounded-lg font-medium transition-all duration-300 text-sm">
-                    Sync
-                </button>
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-lg font-semibold text-slate-800">Emails</h2>
+                    <span id="widthIndicator" class="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-full">384px</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="resetWidthBtn" class="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200" title="Resetear ancho del panel">
+                        <i class="fas fa-expand-arrows-alt text-slate-600"></i>
+                    </button>
+                    <button class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-3 py-1 rounded-lg font-medium transition-all duration-300 text-sm">
+                        Sync
+                    </button>
+                </div>
             </div>
             
             <!-- Filter Tabs -->
@@ -195,6 +203,11 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Separador Redimensionable -->
+    <div id="resizer" class="w-1 bg-slate-200 hover:bg-slate-300 cursor-col-resize transition-colors duration-200 relative group flex items-center justify-center" title="Arrastra para redimensionar el panel">
+        <div class="w-0.5 h-12 bg-slate-400 rounded-full group-hover:bg-slate-500 transition-colors duration-200"></div>
     </div>
 
     <!-- Right Panel - Email Preview & Actions -->
@@ -372,52 +385,203 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    // Email selection functionality
-    $('.email-item').on('click', function() {
-        $('.email-item').removeClass('selected');
-        $(this).addClass('selected');
-        
-        // Here you would typically load the email content
-        // For now, we'll just show a loading state
-        console.log('Email selected:', $(this).find('.font-medium').first().text());
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables para el redimensionamiento
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+    
+    const emailList = document.getElementById('emailList');
+    const resizer = document.getElementById('resizer');
+    
+    // Verificar si los elementos existen
+    if (!resizer || !emailList) {
+        return;
+    }
+    
+    // Función para actualizar el indicador de ancho
+    function updateWidthIndicator() {
+        const currentWidth = emailList.offsetWidth;
+        const indicator = document.getElementById('widthIndicator');
+        if (indicator) {
+            indicator.textContent = currentWidth + 'px';
+        }
+    }
+    
+    // Cargar ancho guardado del localStorage
+    const savedWidth = localStorage.getItem('emailListWidth');
+    if (savedWidth) {
+        emailList.style.width = savedWidth + 'px';
+    }
+    
+    // Actualizar indicador inicial
+    updateWidthIndicator();
+    
+    // Hover sutil para el separador
+    resizer.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#cbd5e1'; // slate-300
     });
-
-    // Folder selection
-    $('.folder-item').on('click', function() {
-        $('.folder-item').removeClass('border-l-4 border-blue-500 bg-blue-50');
-        $(this).addClass('border-l-4 border-blue-500 bg-blue-50');
-        
-        console.log('Folder selected:', $(this).find('.font-medium').text());
+    
+    resizer.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#e2e8f0'; // slate-200
     });
-
-    // File creation from attachments
-    $('button:contains("Create File")').on('click', function() {
-        const fileName = $(this).closest('.flex').find('.font-medium').text();
+    
+    // Funcionalidad de redimensionamiento
+    resizer.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = emailList.offsetWidth;
         
-        // Show modal or redirect to file creation
-        if (confirm(`Create a new file from "${fileName}"?`)) {
-            console.log('Creating file from:', fileName);
-            // Here you would implement the file creation logic
+        // Prevenir selección de texto durante el arrastre
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+        
+        // Cambiar color del separador durante el arrastre
+        this.style.backgroundColor = '#94a3b8'; // slate-400
+        
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    // Funcionalidad de doble clic para resetear ancho
+    resizer.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        resetEmailListWidth();
+    });
+    
+    // Función para resetear el ancho del panel de emails
+    function resetEmailListWidth() {
+        emailList.style.width = '384px';
+        localStorage.setItem('emailListWidth', 384);
+        updateWidthIndicator();
+    }
+    
+    // Botón para resetear ancho
+    const resetBtn = document.getElementById('resetWidthBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            resetEmailListWidth();
+        });
+    }
+    
+    // Actualizar indicador cuando se redimensiona la ventana
+    window.addEventListener('resize', function() {
+        updateWidthIndicator();
+    });
+    
+    // Funcionalidad de mousemove para redimensionamiento
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - startX;
+        const newWidth = startWidth + deltaX;
+        
+        // Limitar el ancho mínimo y máximo
+        if (newWidth >= 300 && newWidth <= 800) {
+            emailList.style.width = newWidth + 'px';
+            updateWidthIndicator();
+        }
+    });
+    
+    // Funcionalidad de mouseup para finalizar redimensionamiento
+    document.addEventListener('mouseup', function() {
+        if (isResizing) {
+            isResizing = false;
+            
+            // Restaurar cursor y selección
+            document.body.style.userSelect = '';
+            document.body.style.cursor = 'default';
+            
+            // Restaurar color del separador
+            resizer.style.backgroundColor = '#e2e8f0'; // slate-200
+            
+            // Guardar ancho en localStorage
+            const currentWidth = emailList.offsetWidth;
+            localStorage.setItem('emailListWidth', currentWidth);
+            updateWidthIndicator();
         }
     });
 
-    // File linking functionality
-    $('button:contains("Link Files")').on('click', function() {
-        alert('File linking modal would open here, allowing users to link this email to existing files.');
-    });
+    // Funcionalidad existente de emails (jQuery)
+    $(document).ready(function() {
+        // Email selection functionality
+        $('.email-item').on('click', function() {
+            $('.email-item').removeClass('selected');
+            $(this).addClass('selected');
+            
+            // Here you would typically load the email content
+            // For now, we'll just show a loading state
+            console.log('Email selected:', $(this).find('.font-medium').first().text());
+        });
 
-    // Create Files functionality
-    $('button:contains("Create Files")').on('click', function() {
-        alert('File creation modal would open here, allowing users to create new files from this email.');
-    });
+        // Folder selection
+        $('.folder-item').on('click', function() {
+            $('.folder-item').removeClass('border-l-4 border-blue-500 bg-blue-50');
+            $(this).addClass('border-l-4 border-blue-500 bg-blue-50');
+            
+            console.log('Folder selected:', $(this).find('.font-medium').text());
+        });
 
-    // Smooth scrolling for all scrollable areas
-    $('.scrollbar-thin').each(function() {
-        $(this).on('scroll', function() {
-            // Add any scroll-based functionality here
+        // File creation from attachments
+        $('button:contains("Create File")').on('click', function() {
+            const fileName = $(this).closest('.flex').find('.font-medium').text();
+            
+            // Show modal or redirect to file creation
+            if (confirm(`Create a new file from "${fileName}"?`)) {
+                console.log('Creating file from:', fileName);
+                // Here you would implement the file creation logic
+            }
+        });
+
+        // File linking functionality
+        $('button:contains("Link Files")').on('click', function() {
+            alert('File linking modal would open here, allowing users to link this email to existing files.');
+        });
+
+        // Create Files functionality
+        $('button:contains("Create Files")').on('click', function() {
+            alert('File creation modal would open here, allowing users to create new files from this email.');
+        });
+
+        // Smooth scrolling for all scrollable areas
+        $('.scrollbar-thin').each(function() {
+            $(this).on('scroll', function() {
+                // Add any scroll-based functionality here
+            });
         });
     });
 });
 </script>
+
+<!-- Estilos CSS para el separador -->
+<style>
+#resizer {
+    cursor: col-resize !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+    z-index: 10;
+}
+
+#resizer:hover {
+    background-color: #cbd5e1 !important; /* slate-300 */
+    transform: scaleX(1.2);
+}
+
+#resizer:active {
+    background-color: #94a3b8 !important; /* slate-400 */
+}
+
+#emailList {
+    transition: width 0.1s ease-out;
+}
+
+/* Mejorar la visibilidad del separador en hover */
+#resizer:hover > div {
+    background-color: #64748b !important; /* slate-500 */
+    transform: scaleY(1.1);
+}
+</style>
 @endsection
